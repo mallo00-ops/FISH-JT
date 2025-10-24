@@ -593,233 +593,282 @@ MiscTab:Button({
     end
 })
 
--- Auto-Favorite (reads rarities from ReplicatedStorage.Tiers)
+-- Replace Sell + Equip blocks with this (works with ReplicatedStorage.Items & SkinCrates)
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 local Packages = ReplicatedStorage:WaitForChild("Packages")
-local Replion = require(Packages:WaitForChild("Replion")).Client
+local Net = require(Packages.Net)
+local Replion = require(Packages.Replion).Client
 
--- use the actual remote path you provided earlier
-local FavoriteEvent = ReplicatedStorage
-    :WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")
-    :WaitForChild("RE/FavoriteItem")
+-- attempt multiple ways to find Sell remote/function (robust)
+local SellRemote
+do
+    pcall(function() SellRemote = Net:RemoteFunction("SellItem") end)
+    if not SellRemote then
+        pcall(function() SellRemote = Net["RF/SellItem"] end)
+    end
+    if not SellRemote then
+        warn("Sell remote not found via Net API. Selling will fail until you set correct remote.")
+    end
+end
 
+-- Equip remote (optional - we mostly do local equip)
+local EquipRemote
+pcall(function() EquipRemote = Net:RemoteEvent("EquipRodSkin") end)
+
+-- Replion Data
 local DataStore = Replion:WaitReplion("Data")
 local Inventory = DataStore:GetExpect({ "Inventory" })
 
-local Categories = { "Fishes", "Items", "Potions", "Totems", "Fishing Rods", "Baits" }
-
--- ---------- Load Tiers from ReplicatedStorage.Tiers ----------
-local function loadTiers()
-    local tiersInst = ReplicatedStorage:FindFirstChild("Tiers")
-    if not tiersInst then
-        warn("Tiers not found in ReplicatedStorage; falling back to defaults.")
-        return {
-            { Name = "Common", Tier = 1 },
-            { Name = "Uncommon", Tier = 2 },
-            { Name = "Rare", Tier = 3 },
-            { Name = "Epic", Tier = 4 },
-            { Name = "Legendary", Tier = 5 },
-            { Name = "Mythic", Tier = 6 },
-            { Name = "SECRET", Tier = 7 },
-        }
-    end
-
-    -- If it's a ModuleScript or Module-like, try require()
-    if tiersInst:IsA("ModuleScript") then
-        local ok, result = pcall(require, tiersInst)
-        if ok and type(result) == "table" then
-            return result
-        end
-    end
-
-    -- If it's a Folder or Instance container, try to read children as entries
-    if tiersInst:IsA("Folder") or tiersInst:IsA("Configuration") or tiersInst:IsA("ValueBase") or #tiersInst:GetChildren() > 0 then
-        local out = {}
-        for _, child in ipairs(tiersInst:GetChildren()) do
-            -- try to read properties: Name, Tier, TierValue etc.
-            local name = child:FindFirstChild("Name") and child.Name or nil
-            -- Some implementations store name in a StringValue child
-            if child:IsA("ModuleScript") then
-                -- nested module: require it
-                local ok, v = pcall(require, child)
-                if ok and type(v) == "table" and v.Name and v.Tier then
-                    table.insert(out, { Name = tostring(v.Name), Tier = tonumber(v.Tier) or nil })
-                end
-            else
-                -- try common patterns
-                local nm
-                if child:FindFirstChild("Name") and child:FindFirstChild("Name"):IsA("StringValue") then
-                    nm = child:FindFirstChild("Name").Value
-                else
-                    nm = child.Name -- fallback to instance name
-                end
-
-                local tierVal
-                if child:FindFirstChild("Tier") and child:FindFirstChild("Tier"):IsA("IntValue") then
-                    tierVal = child:FindFirstChild("Tier").Value
-                elseif child:FindFirstChild("Tier") and child:FindFirstChild("Tier"):IsA("NumberValue") then
-                    tierVal = child:FindFirstChild("Tier").Value
-                else
-                    -- maybe stored in an attribute
-                    tierVal = child:GetAttribute and child:GetAttribute("Tier") or nil
-                end
-
-                if nm then
-                    table.insert(out, { Name = tostring(nm), Tier = tonumber(tierVal) })
-                end
-            end
-        end
-
-        if #out > 0 then
-            return out
-        end
-    end
-
-    -- As a final fallback: attempt to require and parse if it's any other Instance holding source text
-    -- (keep it simple: use fallback defaults if nothing else)
-    warn("Unable to parse ReplicatedStorage.Tiers reliably — using fallback rarities.")
-    return {
-        { Name = "Common", Tier = 1 },
-        { Name = "Uncommon", Tier = 2 },
-        { Name = "Rare", Tier = 3 },
-        { Name = "Epic", Tier = 4 },
-        { Name = "Legendary", Tier = 5 },
-        { Name = "Mythic", Tier = 6 },
-        { Name = "SECRET", Tier = 7 },
-    }
-end
-
-local Tiers = loadTiers()
-
--- Build helper maps:
--- nameToTier["Epic"] -> 4
--- tierToName[4] -> "Epic"
-local nameToTier, tierToName = {}, {}
-for _, entry in ipairs(Tiers) do
-    if entry and entry.Name then
-        local nm = tostring(entry.Name)
-        local tn = tonumber(entry.Tier) or nil
-        nameToTier[nm:lower()] = tn
-        if tn then
-            tierToName[tn] = nm
-        end
-    end
-end
-
--- prepare list of rarity names for the dropdown (preserve order from Tiers)
-local RarityNames = {}
-for _, entry in ipairs(Tiers) do
-    if entry and entry.Name then
-        table.insert(RarityNames, tostring(entry.Name))
-    end
-end
-
--- ---------- Utility: determine if an inventory item matches a tier/name ----------
-local function itemMatchesRarity(item, selectedRarityName)
-    if not item then return false end
-    local wantNameLower = tostring(selectedRarityName):lower()
-
-    -- Possible item fields that describe rarity/tier:
-    -- item.Rarity (could be string OR number), item.Tier (number or string), item.TierIndex, item.TierValue, item.TierName, item.RarityName
-    local fieldsToCheck = {
-        item.Rarity, item.Tier, item.TierIndex, item.TierValue, item.TierName, item.RarityName
-    }
-
-    -- 1) If any field is a string, compare by name (case-insensitive)
-    for _, v in ipairs(fieldsToCheck) do
-        if type(v) == "string" then
-            if v:lower() == wantNameLower then
-                return true
-            end
-        end
-    end
-
-    -- 2) If any field is a number, compare using tier mapping
-    for _, v in ipairs(fieldsToCheck) do
-        if type(v) == "number" then
-            local wantTier = nameToTier[wantNameLower] -- may be nil
-            if wantTier and tonumber(v) == tonumber(wantTier) then
-                return true
-            end
-        end
-    end
-
-    -- 3) Some items might store rarity as nested table: item.Rarity.Name or item.Tier.Name
-    if type(item.Rarity) == "table" and item.Rarity.Name then
-        if tostring(item.Rarity.Name):lower() == wantNameLower then
-            return true
-        end
-    end
-    if type(item.Tier) == "table" and item.Tier.Name then
-        if tostring(item.Tier.Name):lower() == wantNameLower then
-            return true
-        end
-    end
-
-    return false
-end
-
--- ---------- WindUI: multi-dropdown + button ----------
--- Selected rarities table (strings)
-local SelectedRarities = {}
-
--- ensure MiscTab exists (you said you already have it)
-if not MiscTab then
-    error("MiscTab not found — attach this script into your existing WindUI Misc tab environment.")
-end
-
--- create Multi-select dropdown using WindUI's API (your snippet)
-local Dropdown = MiscTab:Dropdown({
-    Title = "Select Rarities",
-    Desc = "Choose rarities to favorite/unfavorite",
-    Values = RarityNames,
-    Value = {},
-    Multi = true,
-    AllowNone = true,
-    Callback = function(option)
-        SelectedRarities = option or {}
-        print("Selected rarities:", HttpService:JSONEncode(SelectedRarities))
-    end
+-- UI references (assumes MiscTab is already created)
+local MiscTab = Window:Tab({
+    Title = "Misc",
+    Icon = "settings"
 })
 
--- Button: Favorite selected rarities
-MiscTab:Button({
-    Title = "Favorite Selected Rarities",
-    Desc = "Toggles favorite for all items matching selected rarities",
-    Callback = function()
-        if #SelectedRarities == 0 then
-            warn("⚠️ No rarities selected.")
-            return
-        end
+---------------------------------------------------------------------
+-- Helper: Get unique list of item names from Replion inventory
+---------------------------------------------------------------------
+local function getInventoryItemNames()
+    local names = {}
+    if not Inventory then
+        return { "No items found" }
+    end
 
-        local matchedCount = 0
-        for _, category in ipairs(Categories) do
-            local items = Inventory[category]
-            if items then
-                for _, item in ipairs(items) do
-                    for _, sel in ipairs(SelectedRarities) do
-                        if itemMatchesRarity(item, sel) then
-                            -- Fire the favorite remote with the UUID found on the item (same as TurtleSpy)
-                            if item.UUID then
-                                pcall(function()
-                                    FavoriteEvent:FireServer(item.UUID)
-                                end)
-                                matchedCount += 1
-                            end
-                            break
-                        end
+    for category, items in pairs(Inventory) do
+        if type(items) == "table" then
+            for _, item in ipairs(items) do
+                if item and item.Name then
+                    if not table.find(names, item.Name) then
+                        table.insert(names, item.Name)
                     end
                 end
             end
         end
+    end
 
-        print(("✅ Favorite toggled for %d items."):format(matchedCount))
+    if #names == 0 then
+        return { "No items found" }
+    end
+
+    table.sort(names)
+    return names
+end
+
+---------------------------------------------------------------------
+-- Sell Dropdown + Button (uses UUID lookup when selling)
+---------------------------------------------------------------------
+local sellDropdown
+sellDropdown = MiscTab:Dropdown({
+    Title = "🎣 Select Item to Sell",
+    Desc = "Choose an item from your Replion inventory",
+    Values = getInventoryItemNames(),
+    Callback = function(selected)
+        -- WindUI may pass table or string
+        if type(selected) == "table" then selected = selected[1] end
+        if selected ~= "No items found" then _G.SelectedSellItem = selected end
     end
 })
+
+MiscTab:Button({
+    Title = "💰 Sell Selected Item",
+    Desc = "Sells the selected item from your inventory (uses UUID)",
+    Callback = function()
+        local itemName = _G.SelectedSellItem
+        if not itemName then
+            return WindUI:Notify({ Title = "Error", Content = "Select an item first!", Duration = 3 })
+        end
+
+        -- find UUID for selected name
+        local uuid
+        for _, categoryItems in pairs(Inventory) do
+            for _, item in ipairs(categoryItems) do
+                if item and item.Name == itemName then
+                    uuid = item.UUID
+                    break
+                end
+            end
+            if uuid then break end
+        end
+
+        if not uuid then
+            WindUI:Notify({ Title = "Error", Content = "Could not find UUID for "..tostring(itemName), Duration = 4 })
+            return
+        end
+
+        if not SellRemote or typeof(SellRemote.InvokeServer) ~= "function" then
+            WindUI:Notify({ Title = "Error", Content = "Sell remote not found or invalid.", Duration = 4 })
+            return
+        end
+
+        local ok, res = pcall(function() return SellRemote:InvokeServer(uuid) end)
+        if ok then
+            WindUI:Notify({ Title = "Success", Content = "✅ Sold: "..itemName, Duration = 3 })
+        else
+            WindUI:Notify({ Title = "Error", Content = "Sell failed: "..tostring(res), Duration = 4 })
+            warn("Sell error:", res)
+        end
+
+        -- refresh UI immediately
+        if sellDropdown and sellDropdown.Refresh then
+            sellDropdown:Refresh(getInventoryItemNames())
+        end
+    end
+})
+
+---------------------------------------------------------------------
+-- Helper: Build rod-skin list from SkinCrates (names only)
+---------------------------------------------------------------------
+local function getRodSkinNames()
+    local skins = {}
+    local ok, crates = pcall(function() return require(ReplicatedStorage:WaitForChild("SkinCrates")) end)
+    if not ok or not crates then
+        warn("SkinCrates not found or require failed:", crates)
+        return skins
+    end
+
+    for _, crateData in pairs(crates) do
+        for _, item in ipairs(crateData.Items or {}) do
+            local info = item.CurrencyRewardInfo
+            if info and info[1] == "Fishing Rods" and info[2] then
+                if not table.find(skins, info[2]) then
+                    table.insert(skins, info[2])
+                end
+            end
+        end
+    end
+    table.sort(skins)
+    return skins
+end
+
+---------------------------------------------------------------------
+-- Equip actual model (searches ReplicatedStorage.Items recursively)
+---------------------------------------------------------------------
+local function findItemModelByName(name)
+    if not name then return nil end
+    -- try direct folder
+    local itemsFolder = ReplicatedStorage:FindFirstChild("Items")
+    if itemsFolder then
+        local found = itemsFolder:FindFirstChild(name)
+        if found then return found end
+        -- recursive search (FindFirstChild may not search nested groups)
+        local queue = {itemsFolder}
+        while #queue > 0 do
+            local node = table.remove(queue, 1)
+            for _, child in ipairs(node:GetChildren()) do
+                if child.Name == name then
+                    return child
+                end
+                if #child:GetChildren() > 0 then
+                    table.insert(queue, child)
+                end
+            end
+        end
+    end
+    -- fallback: global FindFirstChild with search across descendants (if available in your env)
+    local ok, res = pcall(function() return ReplicatedStorage:FindFirstChild(name, true) end)
+    if ok and res then return res end
+    return nil
+end
+
+local function equipModelLocal(name)
+    local model = findItemModelByName(name)
+    if not model then
+        WindUI:Notify({ Title = "Error", Content = "Model not found for: "..tostring(name), Duration = 4 })
+        warn("Model not found in ReplicatedStorage.Items for:", name)
+        return false
+    end
+
+    -- clone model then put in Backpack and equip
+    local clone = model:Clone()
+    clone.Parent = LocalPlayer.Backpack
+
+    -- equip via Humanoid:EquipTool if present
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid and typeof(humanoid.EquipTool) == "function" then
+        -- wait a tick to ensure Backpack is updated
+        task.wait(0.05)
+        local success, err = pcall(function()
+            humanoid:EquipTool(clone)
+        end)
+        if not success then
+            warn("EquipTool failed:", err)
+        end
+    end
+
+    return true
+end
+
+---------------------------------------------------------------------
+-- Rod skins dropdown + equip button (uses real model)
+---------------------------------------------------------------------
+local equipDropdown
+equipDropdown = MiscTab:Dropdown({
+    Title = "🎨 Select Rod Skin",
+    Desc = "Choose a rod skin to equip (uses actual model from ReplicatedStorage.Items)",
+    Values = getRodSkinNames(),
+    Callback = function(selected)
+        if type(selected) == "table" then selected = selected[1] end
+        _G.SelectedRodSkin = selected
+    end
+})
+
+MiscTab:Button({
+    Title = "🎣 Equip Selected Skin (real model)",
+    Desc = "Clones model from ReplicatedStorage.Items and equips it locally",
+    Callback = function()
+        local skin = _G.SelectedRodSkin
+        if not skin then
+            return WindUI:Notify({ Title = "Error", Content = "Select a skin first!", Duration = 3 })
+        end
+
+        local ok, res = pcall(function()
+            return equipModelLocal(skin)
+        end)
+        if ok and res then
+            WindUI:Notify({ Title = "Success", Content = "✨ Equipped model: "..skin, Duration = 3 })
+            -- optional: inform server (not required)
+            pcall(function() if EquipRemote and typeof(EquipRemote.FireServer) == "function" then EquipRemote:FireServer(skin) end end)
+        else
+            WindUI:Notify({ Title = "Error", Content = "Failed to equip model: "..tostring(res), Duration = 4 })
+        end
+    end
+})
+
+---------------------------------------------------------------------
+-- Auto-refresh hooks
+---------------------------------------------------------------------
+-- Refresh sell list on Replion inventory change
+if DataStore and DataStore.Changed then
+    DataStore.Changed:Connect(function(path, value)
+        -- only refresh if Inventory changed (path may vary; this matches earlier usage)
+        if path and path[1] == "Inventory" and sellDropdown and sellDropdown.Refresh then
+            sellDropdown:Refresh(getInventoryItemNames())
+        end
+    end)
+end
+
+-- Refresh on open + periodic refresh for skins
+if equipDropdown and equipDropdown.Refresh then
+    equipDropdown:Refresh(getRodSkinNames())
+end
+
+task.spawn(function()
+    while task.wait(60) do
+        if equipDropdown and equipDropdown.Refresh then
+            equipDropdown:Refresh(getRodSkinNames())
+        end
+    end
+end)
+
+-- small debug prints to help you if something still fails
+print("Sell remote:", SellRemote and "found" or "missing")
+print("Equip remote:", EquipRemote and "found" or "missing")
+print("Sample skins loaded:", table.concat(getRodSkinNames(), ", "))
+print("Sample inventory items:", table.concat((function() local t=getInventoryItemNames(); if #t>10 then return {t[1], "..."} else return t end end)(), ", "))
 
 -- ✅ Show popup after UI is ready
 task.delay(0.2, function()
