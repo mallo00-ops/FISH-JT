@@ -457,418 +457,143 @@ MiscTab:Button({
     Callback = TeleportToSaved
 })
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Full saved locations converted to Vector3
+--// Saved teleport spots
 local SavedLocations = {
-    ["Halloween spot #1"] = Vector3.new(2100.602, 81.031, 3295.725),
-    ["Halloween spot #2"] = Vector3.new(1677.609, 4.619, 3224.542),
-    ["Halloween spot #3"] = Vector3.new(1845.915, 5.288, 2899.503),
-    ["Halloween spot #4"] = Vector3.new(1675.145, 4.721, 2983.356),
-    ["ancient jungle #1"] = Vector3.new(1487.165, 6.625, -852.215),
-    ["ancient jungle #2"] = Vector3.new(1826.831, 7.625, -290.251),
-    ["ancient jungle #3"] = Vector3.new(1410.106, 30.375, 80.168),
-    ["ancient jungle #4"] = Vector3.new(892.637, 7.625, -360.875),
-    ["Coral Reefs #1"] = Vector3.new(-3023.865, 2.509, 2272.490),
-    ["Coral Reefs #2"] = Vector3.new(-3286.778, 4.178, 2420.219),
-    ["Coral Reefs #3"] = Vector3.new(-3162.948, 3.756, 2132.056),
-    ["Coral Reefs #4"] = Vector3.new(-2915.376, 3.25, 2079.401),
-    ["Tropical Grove #1"] = Vector3.new(-2139.157, 53.486, 3675.481),
-    ["Tropical Grove #2"] = Vector3.new(-2041.064, 5.111, 3818.860),
-    ["Tropical Grove #3"] = Vector3.new(-2169.025, 6.011, 3667.199),
-    ["Tropical Grove #4"] = Vector3.new(-1999.923, 8.312, 3690.198),
-    ["Fisherman #1"] = Vector3.new(-128.226, 3.262, 3068.447),
-    ["Fisherman #2"] = Vector3.new(-18.643, 3.211, 3137.314),
-    ["Fisherman #3"] = Vector3.new(250.161, 3.262, 2975.284),
-    ["Fisherman #4"] = Vector3.new(-61.574, 3.262, 2855.755),
-    ["kohana #1"] = Vector3.new(-895.300, 3.428, 730.400),
-    ["kohana #2"] = Vector3.new(-659.519, 2.825, 557.927),
-    ["kohana #3"] = Vector3.new(-655.323, 17.250, 489.119),
-    ["kohana #Volcano"] = Vector3.new(-642.519, 30.015, 113.596),
-    ["Crater #1"] = Vector3.new(1004.361, 10.938, 5057.988),
-    ["Crater #2"] = Vector3.new(1059.055, 3.749, 5025.090),
-    ["crater #3"] = Vector3.new(925.533, 6.463, 5067.278),
-    ["Crater #4"] = Vector3.new(933.406, 3.967, 5092.374),
-    ["Esoteric depths #1"] = Vector3.new(3187.171, -1302.105, 1366.361),
-    ["Esoteric depths #2"] = Vector3.new(3228.914, -1302.105, 1458.557),
-    ["Esoteric depths #3"] = Vector3.new(3219.282, -1293.864, 1365.060),
-    ["Esoteric depths #4"] = Vector3.new(3249.974, -1293.424, 1435.317)
+	["Halloween spot #1"] = Vector3.new(2100.602, 81.031, 3295.725),
+	["Halloween spot #2"] = Vector3.new(1677.609, 4.619, 3224.542),
+	["Halloween spot #3"] = Vector3.new(1845.915, 5.288, 2899.503),
+	["Halloween spot #4"] = Vector3.new(1675.145, 4.721, 2983.356),
+
+	["ancient jungle #1"] = Vector3.new(1487.165, 6.625, -852.215),
+	["ancient jungle #2"] = Vector3.new(1826.831, 7.625, -290.251),
+	["ancient jungle #3"] = Vector3.new(1410.106, 30.375, 80.168),
+	["ancient jungle #4"] = Vector3.new(892.637, 7.625, -360.875),
+
+	["Coral Reefs #1"] = Vector3.new(-3023.865, 2.509, 2272.490),
+	["Coral Reefs #2"] = Vector3.new(-3286.778, 4.178, 2420.219),
+	["Coral Reefs #3"] = Vector3.new(-3162.948, 3.756, 2132.056),
+	["Coral Reefs #4"] = Vector3.new(-2915.376, 3.25, 2079.401),
+
+	["Tropical Grove #1"] = Vector3.new(-2139.157, 53.486, 3675.481),
+	["Tropical Grove #2"] = Vector3.new(-2041.064, 5.111, 3818.860),
+	["Tropical Grove #3"] = Vector3.new(-2169.025, 6.011, 3667.199),
+	["Tropical Grove #4"] = Vector3.new(-1999.923, 8.312, 3690.198),
+
+	["Fisherman #1"] = Vector3.new(-128.226, 3.262, 3068.447),
+	["Fisherman #2"] = Vector3.new(-18.643, 3.211, 3137.314),
+	["Fisherman #3"] = Vector3.new(250.161, 3.262, 2975.284),
+	["Fisherman #4"] = Vector3.new(-61.574, 3.262, 2855.755),
+
+	["kohana #1"] = Vector3.new(-895.300, 3.428, 730.400),
+	["kohana #2"] = Vector3.new(-659.519, 2.825, 557.927),
+	["kohana #3"] = Vector3.new(-655.323, 17.250, 489.119),
+	["kohana #Volcano"] = Vector3.new(-642.519, 30.015, 113.596),
+
+	["Crater #1"] = Vector3.new(1004.361, 10.938, 5057.988),
+	["Crater #2"] = Vector3.new(1059.055, 3.749, 5025.090),
+	["crater #3"] = Vector3.new(925.533, 6.463, 5067.278),
+	["Crater #4"] = Vector3.new(933.406, 3.967, 5092.374),
+
+	["Esoteric depths #1"] = Vector3.new(3187.171, -1302.105, 1366.361),
+	["Esoteric depths #2"] = Vector3.new(3228.914, -1302.105, 1458.557),
+	["Esoteric depths #3"] = Vector3.new(3219.282, -1293.864, 1365.060),
+	["Esoteric depths #4"] = Vector3.new(3249.974, -1293.424, 1435.317)
 }
 
--- Utility function to get sorted keys from a table
-local function GetSortedKeys(tbl)
-    local keys = {}
-    for k, _ in pairs(tbl) do
-        table.insert(keys, k)
-    end
-    table.sort(keys, function(a, b)
-        return a:lower() < b:lower()  -- alphabetical order, case-insensitive
-    end)
-    return keys
+local function SortKeys(tbl)
+	local keys = {}
+	for name in pairs(tbl) do
+		table.insert(keys, name)
+	end
+	table.sort(keys, function(a, b)
+		return a:lower() < b:lower()
+	end)
+	return keys
 end
 
-Dropdown = MiscTab:Dropdown({
-    Title = "Teleport Locations",
-    Desc = "Select a location to teleport",
-    Values = GetSortedKeys(SavedLocations),  -- sorted now
-    Callback = function(loc)
-        selectedLocation = loc
-    end
+local selectedLocation
+
+local TeleportDropdown = MiscTab:Dropdown({
+	Title = "Teleport Locations",
+	Desc = "Pick a location to teleport to",
+	Values = SortKeys(SavedLocations),
+	Callback = function(option)
+		selectedLocation = option
+	end
 })
 
--- Button to teleport to selected location
 MiscTab:Button({
-    Title = "🧭 Teleport to Selected Location",
-    Desc = "Teleports you to the selected saved location",
-    Callback = function()
-        if not selectedLocation then 
-            warn("Select a location first!") 
-            return 
-        end
+	Title = "Teleport",
+	Desc = "Go to the chosen saved spot",
+	Callback = function()
+		if not selectedLocation then
+			warn("[Teleport] You need to pick a spot first.")
+			return
+		end
 
-        local pos = SavedLocations[selectedLocation]
-        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = CFrame.new(pos)
-        else
-            warn("HumanoidRootPart not found.")
-        end
-    end
+		local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local root = char:FindFirstChild("HumanoidRootPart")
+
+		if root then
+			root.CFrame = CFrame.new(SavedLocations[selectedLocation])
+		else
+			warn("[Teleport] No HumanoidRootPart found.")
+		end
+	end
 })
 
--- 🔹 Boats Dropdown & Spawn Button
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Packages = ReplicatedStorage:WaitForChild("Packages")
-local BoatRemote = Packages._Index["sleitnick_net@0.2.0"].net:WaitForChild("RF/SpawnBoat")
+local Net = Packages:WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
+local BoatRemote = Net.net:WaitForChild("RF/SpawnBoat")
 
--- Get all available boats from ReplicatedStorage.Boats
 local BoatsFolder = ReplicatedStorage:WaitForChild("Boats")
 local BoatNames = {}
 for _, boat in ipairs(BoatsFolder:GetChildren()) do
-    table.insert(BoatNames, boat.Name)
+	table.insert(BoatNames, boat.Name)
 end
 
-local selectedBoat = nil
+local selectedBoat
 
--- Dropdown to select boat
 local BoatDropdown = MiscTab:Dropdown({
-    Title = "Select Boat",
-    Desc = "Choose a boat to spawn",
-    Values = BoatNames,
-    Callback = function(boat)
-        selectedBoat = boat
-    end
-})
-
--- Button to spawn selected boat
-MiscTab:Button({
-    Title = "🚤 Spawn Selected Boat",
-    Desc = "Spawns the chosen boat using the game's remote",
-    Callback = function()
-        if not selectedBoat then
-            warn("Select a boat first!")
-            return
-        end
-
-        -- Find the index of the selected boat
-        local boatIndex
-        for i, boat in ipairs(BoatsFolder:GetChildren()) do
-            if boat.Name == selectedBoat then
-                boatIndex = i
-                break
-            end
-        end
-
-        if boatIndex then
-            -- Spawn the boat using the remote
-            pcall(function()
-                BoatRemote:InvokeServer(boatIndex)
-            end)
-        else
-            warn("Could not find boat index for: " .. selectedBoat)
-        end
-    end
-})
-
--- Replace Sell + Equip blocks with this (works with ReplicatedStorage.Items & SkinCrates)
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Packages = ReplicatedStorage:WaitForChild("Packages")
-local Net = require(Packages.Net)
-local Replion = require(Packages.Replion).Client
-
--- attempt multiple ways to find Sell remote/function (robust)
-local SellRemote
-do
-    pcall(function() SellRemote = Net:RemoteFunction("SellItem") end)
-    if not SellRemote then
-        pcall(function() SellRemote = Net["RF/SellItem"] end)
-    end
-    if not SellRemote then
-        warn("Sell remote not found via Net API. Selling will fail until you set correct remote.")
-    end
-end
-
--- Equip remote (optional - we mostly do local equip)
-local EquipRemote
-pcall(function() EquipRemote = Net:RemoteEvent("EquipRodSkin") end)
-
--- Replion Data
-local DataStore = Replion:WaitReplion("Data")
-local Inventory = DataStore:GetExpect({ "Inventory" })
-
--- UI references (assumes MiscTab is already created)
-local MiscTab = Window:Tab({
-    Title = "Misc",
-    Icon = "settings"
-})
-
----------------------------------------------------------------------
--- Helper: Get unique list of item names from Replion inventory
----------------------------------------------------------------------
-local function getInventoryItemNames()
-    local names = {}
-    if not Inventory then
-        return { "No items found" }
-    end
-
-    for category, items in pairs(Inventory) do
-        if type(items) == "table" then
-            for _, item in ipairs(items) do
-                if item and item.Name then
-                    if not table.find(names, item.Name) then
-                        table.insert(names, item.Name)
-                    end
-                end
-            end
-        end
-    end
-
-    if #names == 0 then
-        return { "No items found" }
-    end
-
-    table.sort(names)
-    return names
-end
-
----------------------------------------------------------------------
--- Sell Dropdown + Button (uses UUID lookup when selling)
----------------------------------------------------------------------
-local sellDropdown
-sellDropdown = MiscTab:Dropdown({
-    Title = "🎣 Select Item to Sell",
-    Desc = "Choose an item from your Replion inventory",
-    Values = getInventoryItemNames(),
-    Callback = function(selected)
-        -- WindUI may pass table or string
-        if type(selected) == "table" then selected = selected[1] end
-        if selected ~= "No items found" then _G.SelectedSellItem = selected end
-    end
+	Title = "Select Boat",
+	Desc = "Pick a boat to spawn",
+	Values = BoatNames,
+	Callback = function(name)
+		selectedBoat = name
+	end
 })
 
 MiscTab:Button({
-    Title = "💰 Sell Selected Item",
-    Desc = "Sells the selected item from your inventory (uses UUID)",
-    Callback = function()
-        local itemName = _G.SelectedSellItem
-        if not itemName then
-            return WindUI:Notify({ Title = "Error", Content = "Select an item first!", Duration = 3 })
-        end
+	Title = "Spawn Boat",
+	Desc = "Spawns your chosen boat",
+	Callback = function()
+		if not selectedBoat then
+			warn("[Boat] Choose a boat first.")
+			return
+		end
 
-        -- find UUID for selected name
-        local uuid
-        for _, categoryItems in pairs(Inventory) do
-            for _, item in ipairs(categoryItems) do
-                if item and item.Name == itemName then
-                    uuid = item.UUID
-                    break
-                end
-            end
-            if uuid then break end
-        end
+		local index
+		for i, boat in ipairs(BoatsFolder:GetChildren()) do
+			if boat.Name == selectedBoat then
+				index = i
+				break
+			end
+		end
 
-        if not uuid then
-            WindUI:Notify({ Title = "Error", Content = "Could not find UUID for "..tostring(itemName), Duration = 4 })
-            return
-        end
+		if not index then
+			warn("[Boat] Couldn’t find boat index.")
+			return
+		end
 
-        if not SellRemote or typeof(SellRemote.InvokeServer) ~= "function" then
-            WindUI:Notify({ Title = "Error", Content = "Sell remote not found or invalid.", Duration = 4 })
-            return
-        end
-
-        local ok, res = pcall(function() return SellRemote:InvokeServer(uuid) end)
-        if ok then
-            WindUI:Notify({ Title = "Success", Content = "✅ Sold: "..itemName, Duration = 3 })
-        else
-            WindUI:Notify({ Title = "Error", Content = "Sell failed: "..tostring(res), Duration = 4 })
-            warn("Sell error:", res)
-        end
-
-        -- refresh UI immediately
-        if sellDropdown and sellDropdown.Refresh then
-            sellDropdown:Refresh(getInventoryItemNames())
-        end
-    end
+		pcall(function()
+			BoatRemote:InvokeServer(index)
+		end)
+	end
 })
-
----------------------------------------------------------------------
--- Helper: Build rod-skin list from SkinCrates (names only)
----------------------------------------------------------------------
-local function getRodSkinNames()
-    local skins = {}
-    local ok, crates = pcall(function() return require(ReplicatedStorage:WaitForChild("SkinCrates")) end)
-    if not ok or not crates then
-        warn("SkinCrates not found or require failed:", crates)
-        return skins
-    end
-
-    for _, crateData in pairs(crates) do
-        for _, item in ipairs(crateData.Items or {}) do
-            local info = item.CurrencyRewardInfo
-            if info and info[1] == "Fishing Rods" and info[2] then
-                if not table.find(skins, info[2]) then
-                    table.insert(skins, info[2])
-                end
-            end
-        end
-    end
-    table.sort(skins)
-    return skins
-end
-
----------------------------------------------------------------------
--- Equip actual model (searches ReplicatedStorage.Items recursively)
----------------------------------------------------------------------
-local function findItemModelByName(name)
-    if not name then return nil end
-    -- try direct folder
-    local itemsFolder = ReplicatedStorage:FindFirstChild("Items")
-    if itemsFolder then
-        local found = itemsFolder:FindFirstChild(name)
-        if found then return found end
-        -- recursive search (FindFirstChild may not search nested groups)
-        local queue = {itemsFolder}
-        while #queue > 0 do
-            local node = table.remove(queue, 1)
-            for _, child in ipairs(node:GetChildren()) do
-                if child.Name == name then
-                    return child
-                end
-                if #child:GetChildren() > 0 then
-                    table.insert(queue, child)
-                end
-            end
-        end
-    end
-    -- fallback: global FindFirstChild with search across descendants (if available in your env)
-    local ok, res = pcall(function() return ReplicatedStorage:FindFirstChild(name, true) end)
-    if ok and res then return res end
-    return nil
-end
-
-local function equipModelLocal(name)
-    local model = findItemModelByName(name)
-    if not model then
-        WindUI:Notify({ Title = "Error", Content = "Model not found for: "..tostring(name), Duration = 4 })
-        warn("Model not found in ReplicatedStorage.Items for:", name)
-        return false
-    end
-
-    -- clone model then put in Backpack and equip
-    local clone = model:Clone()
-    clone.Parent = LocalPlayer.Backpack
-
-    -- equip via Humanoid:EquipTool if present
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if humanoid and typeof(humanoid.EquipTool) == "function" then
-        -- wait a tick to ensure Backpack is updated
-        task.wait(0.05)
-        local success, err = pcall(function()
-            humanoid:EquipTool(clone)
-        end)
-        if not success then
-            warn("EquipTool failed:", err)
-        end
-    end
-
-    return true
-end
-
----------------------------------------------------------------------
--- Rod skins dropdown + equip button (uses real model)
----------------------------------------------------------------------
-local equipDropdown
-equipDropdown = MiscTab:Dropdown({
-    Title = "🎨 Select Rod Skin",
-    Desc = "Choose a rod skin to equip (uses actual model from ReplicatedStorage.Items)",
-    Values = getRodSkinNames(),
-    Callback = function(selected)
-        if type(selected) == "table" then selected = selected[1] end
-        _G.SelectedRodSkin = selected
-    end
-})
-
-MiscTab:Button({
-    Title = "🎣 Equip Selected Skin (real model)",
-    Desc = "Clones model from ReplicatedStorage.Items and equips it locally",
-    Callback = function()
-        local skin = _G.SelectedRodSkin
-        if not skin then
-            return WindUI:Notify({ Title = "Error", Content = "Select a skin first!", Duration = 3 })
-        end
-
-        local ok, res = pcall(function()
-            return equipModelLocal(skin)
-        end)
-        if ok and res then
-            WindUI:Notify({ Title = "Success", Content = "✨ Equipped model: "..skin, Duration = 3 })
-            -- optional: inform server (not required)
-            pcall(function() if EquipRemote and typeof(EquipRemote.FireServer) == "function" then EquipRemote:FireServer(skin) end end)
-        else
-            WindUI:Notify({ Title = "Error", Content = "Failed to equip model: "..tostring(res), Duration = 4 })
-        end
-    end
-})
-
----------------------------------------------------------------------
--- Auto-refresh hooks
----------------------------------------------------------------------
--- Refresh sell list on Replion inventory change
-if DataStore and DataStore.Changed then
-    DataStore.Changed:Connect(function(path, value)
-        -- only refresh if Inventory changed (path may vary; this matches earlier usage)
-        if path and path[1] == "Inventory" and sellDropdown and sellDropdown.Refresh then
-            sellDropdown:Refresh(getInventoryItemNames())
-        end
-    end)
-end
-
--- Refresh on open + periodic refresh for skins
-if equipDropdown and equipDropdown.Refresh then
-    equipDropdown:Refresh(getRodSkinNames())
-end
-
-task.spawn(function()
-    while task.wait(60) do
-        if equipDropdown and equipDropdown.Refresh then
-            equipDropdown:Refresh(getRodSkinNames())
-        end
-    end
-end)
-
--- small debug prints to help you if something still fails
-print("Sell remote:", SellRemote and "found" or "missing")
-print("Equip remote:", EquipRemote and "found" or "missing")
-print("Sample skins loaded:", table.concat(getRodSkinNames(), ", "))
-print("Sample inventory items:", table.concat((function() local t=getInventoryItemNames(); if #t>10 then return {t[1], "..."} else return t end end)(), ", "))
 
 -- ✅ Show popup after UI is ready
 task.delay(0.2, function()
