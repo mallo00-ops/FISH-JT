@@ -1,0 +1,614 @@
+-- 🔴 Load WindUI
+local success, WindUI = pcall(function()
+    return loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+end)
+if not success or not WindUI then
+    warn("❌ Failed to load WindUI")
+    return
+end
+
+-- 🌈 Add all themes
+local themeNames = {
+    "Ocean Blue","Forest Green","Minimal Light","Retro Purple","Sunset",
+    "Neon Pulse","Steel Phantom","Vaporwave","Deep Sea","Sepia Warmth",
+    "Monokai Dark","Solarized Light","Cherry Blossom","Charcoal Gold",
+    "Icy Mint","Volcano","Amethyst","Pastel Dream","Coffee Shop","Cyberpunk Red"
+}
+
+-- Example: Adding all themes
+local themeColors = {
+    ["Ocean Blue"] = {Accent="#0B5394", Dialog="#0A3D6B", Outline="#6DACEA", Text="#EBF5FF", Placeholder="#85AECF", Background="#051A2E", Button="#1C67A8", Icon="#A9D5FD"},
+    ["Forest Green"] = {Accent="#1A5E2E", Dialog="#114220", Outline="#8AC79B", Text="#E9FCE9", Placeholder="#79A378", Background="#0A2B14", Button="#2B7A42", Icon="#B3E3C1"},
+    ["Minimal Light"] = {Accent="#F3F4F6", Dialog="#FFFFFF", Outline="#4B5563", Text="#1F2937", Placeholder="#9CA3AF", Background="#F9FAFB", Button="#E5E7EB", Icon="#4B5563"},
+    ["Retro Purple"] = {Accent="#7E22CE", Dialog="#4A148C", Outline="#F0ABFC", Text="#FDF4FF", Placeholder="#BC8FDD", Background="#2D0557", Button="#9333EA", Icon="#F0ABFC"},
+    ["Sunset"] = {Accent="#FF8847", Dialog="#CC5500", Outline="#FFD9C0", Text="#FFF7F0", Placeholder="#FFC099", Background="#331A00", Button="#FF7043", Icon="#FFD9C0"},
+    ["Neon Pulse"] = {Accent="#00FF00", Dialog="#111111", Outline="#00FFFF", Text="#FFFFFF", Placeholder="#008800", Background="#000000", Button="#39FF14", Icon="#00FFFF"},
+    ["Steel Phantom"] = {Accent="#404040", Dialog="#262626", Outline="#A3A3A3", Text="#D4D4D4", Placeholder="#737373", Background="#171717", Button="#525252", Icon="#A3A3A3"},
+    ["Vaporwave"] = {Accent="#FF00FF", Dialog="#1B001B", Outline="#00FFFF", Text="#FFFFFF", Placeholder="#FF69FF", Background="#0A0014", Button="#E75480", Icon="#00FFFF"},
+    ["Deep Sea"] = {Accent="#008B8B", Dialog="#005A5A", Outline="#80CBC4", Text="#E0FFFF", Placeholder="#4DB6AC", Background="#003636", Button="#00A3A3", Icon="#80CBC4"},
+    ["Sepia Warmth"] = {Accent="#7B3F00", Dialog="#5C3200", Outline="#D2B48C", Text="#F5E8D6", Placeholder="#A98F70", Background="#3D291F", Button="#9D5B18", Icon="#D2B48C"},
+    ["Monokai Dark"] = {Accent="#F92672", Dialog="#272822", Outline="#66D9EF", Text="#F8F8F2", Placeholder="#75715E", Background="#1C1E1A", Button="#A6E22E", Icon="#66D9EF"},
+    ["Solarized Light"] = {Accent="#268BD2", Dialog="#FDF6E3", Outline="#93A1A1", Text="#586E75", Placeholder="#839496", Background="#EEE8D5", Button="#B58900", Icon="#268BD2"},
+    ["Cherry Blossom"] = {Accent="#F9BCCB", Dialog="#FFFAFD", Outline="#D96985", Text="#4A1429", Placeholder="#C397A3", Background="#FFF7F9", Button="#E68A9F", Icon="#D96985"},
+    ["Charcoal Gold"] = {Accent="#FFD700", Dialog="#2C2C2C", Outline="#C0C0C0", Text="#F5F5F5", Placeholder="#6E6E6E", Background="#1D1D1D", Button="#B8860B", Icon="#FFD700"},
+    ["Icy Mint"] = {Accent="#40E0D0", Dialog="#F0FFFF", Outline="#81D4FA", Text="#004D40", Placeholder="#B2DFDB", Background="#E0FFFF", Button="#80CBC4", Icon="#40E0D0"},
+    ["Volcano"] = {Accent="#B22222", Dialog="#1C1C1C", Outline="#FF6347", Text="#EBEBEB", Placeholder="#704747", Background="#0A0A0A", Button="#FF4500", Icon="#FF6347"},
+    ["Amethyst"] = {Accent="#9966CC", Dialog="#36284C", Outline="#CCFF66", Text="#EDE9F2", Placeholder="#8A72A4", Background="#221A33", Button="#7A52AA", Icon="#CCFF66"},
+    ["Pastel Dream"] = {Accent="#FFB3BA", Dialog="#FAF3E0", Outline="#BAE1FF", Text="#333333", Placeholder="#C1B4A5", Background="#FFFFFF", Button="#BAE1FF", Icon="#FFB3BA"},
+    ["Coffee Shop"] = {Accent="#795548", Dialog="#F5F5DC", Outline="#A1887F", Text="#3E2723", Placeholder="#BCB0A4", Background="#FFF8E1", Button="#D7CCC8", Icon="#795548"},
+    ["Cyberpunk Red"] = {Accent="#FF3333", Dialog="#080008", Outline="#33FFFF", Text="#FDFDFD", Placeholder="#771111", Background="#000000", Button="#CC0000", Icon="#33FFFF"}
+}
+
+-- Add all themes to WindUI
+for name, colors in pairs(themeColors) do
+    WindUI:AddTheme({
+        Name = name,
+        Accent = Color3.fromHex(colors.Accent),
+        Dialog = Color3.fromHex(colors.Dialog),
+        Outline = Color3.fromHex(colors.Outline),
+        Text = Color3.fromHex(colors.Text),
+        Placeholder = Color3.fromHex(colors.Placeholder),
+        Background = Color3.fromHex(colors.Background),
+        Button = Color3.fromHex(colors.Button),
+        Icon = Color3.fromHex(colors.Icon)
+    })
+end
+
+WindUI:SetTheme("Volcano") -- default
+
+WindUI:SetFont("rbxassetid://12187360881")
+
+local function GradientText(text, color1, color2)
+    local result = ""
+    for i = 1, #text do
+        local t = (i - 1) / (#text - 1)
+        local r = color1.R + (color2.R - color1.R) * t
+        local g = color1.G + (color2.G - color1.G) * t
+        local b = color1.B + (color2.B - color1.B) * t
+        local hex = string.format("#%02X%02X%02X", r * 255, g * 255, b * 255)
+        result = result .. string.format('<font color="%s">%s</font>', hex, text:sub(i, i))
+    end
+    return result
+end
+
+local Window = WindUI:CreateWindow({
+    Title = GradientText("H4xScripts", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0)),
+    Icon = "rbxassetid://80426684728669",
+    IconThemed = "true",
+    Author = "By @mallo",
+    Size = UDim2.fromOffset(580, 460),
+    Resizable = true,
+    Transparent = true,
+    User = {
+        Enabled = true,
+        Anonymous = true,
+        Callback = function()
+            print("clicked")
+        end,
+    },
+})
+
+Window:Tag({
+    Title = "Developer",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 10, -- from 0 to 13
+})
+
+Window:Tag({
+    Title = "test UI V1.0",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 10, -- from 0 to 13
+})
+
+Window:SetIconSize(50) -- default is 20
+
+Window:EditOpenButton({
+    Title =  GradientText("H4xScripts", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0)),
+    Icon = "rbxassetid://80426684728669",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new( -- gradient
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:DisableTopbarButtons({ "Close" })
+
+local Info = Window:Tab({Title = "Information", Icon = "info" })
+
+local InviteCode = "h4xscripts" -- change to your discord invite
+local DiscordAPI = "https://discord.com/api/v10/invites/" .. InviteCode .. "?with_counts=true&with_expiration=true"
+
+local Response
+local ErrorMessage = nil
+
+xpcall(function()
+    Response = game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+        Url = DiscordAPI,
+        Method = "GET",
+        Headers = {
+            ["Accept"] = "application/json"
+        }
+    }).Body)
+end, function(err)
+    warn("err fetching discord info: " .. tostring(err))
+    ErrorMessage = tostring(err)
+    Response = nil
+end)
+
+if Response and Response.guild then
+    local ParagraphConfig = {
+        Title = Response.guild.name,
+        Desc =
+            ' <font color="#52525b">•</font> Member Count: ' .. tostring(Response.approximate_member_count) ..
+            '\n <font color="#16a34a">•</font> Online Count: ' .. tostring(Response.approximate_presence_count)
+        ,
+        Image = "https://cdn.discordapp.com/icons/" .. Response.guild.id .. "/" .. Response.guild.icon .. ".png?size=256",
+        ImageSize = 42,
+        Buttons = {
+            {
+                Icon = "link",
+                Title = "Copy Discord Invite",
+                Callback = function()
+                    pcall(function()
+                        setclipboard("https://discord.gg/" .. InviteCode)
+                    end)
+                end
+            },
+            {
+                Icon = "refresh-cw",
+                Title = "Update Info",
+                Callback = function()
+                    xpcall(function()
+                        local UpdatedResponse = game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+                            Url = DiscordAPI,
+                            Method = "GET",
+                        }).Body)
+                        
+                        if UpdatedResponse and UpdatedResponse.guild then
+                            DiscordInfo:SetDesc(
+                                ' <font color="#52525b">•</font> Member Count: ' .. tostring(UpdatedResponse.approximate_member_count) ..
+                                '\n <font color="#16a34a">•</font> Online Count: ' .. tostring(UpdatedResponse.approximate_presence_count)
+                            )
+                        end
+                    end, function(err)
+                        warn("err updating discord info: " .. tostring(err))
+                    end)
+                end
+            }
+        }
+    }
+    
+    if Response.guild.banner then
+        ParagraphConfig.Thumbnail = "https://cdn.discordapp.com/banners/" .. Response.guild.id .. "/" .. Response.guild.banner .. ".png?size=256"
+        ParagraphConfig.ThumbnailSize = 80
+    end
+    
+    local DiscordInfo = Info:Paragraph(ParagraphConfig)
+else
+    Info:Paragraph({
+        Title = "Error when receiving information about the Discord server",
+        Desc = ErrorMessage or "Unknown error occurred",
+        Image = "triangle-alert",
+        ImageSize = 26,
+        Color = "Red",
+    })
+end
+
+-- 📘 Game Information Box (like “Bubble Gum Simulator INFINITY”)
+local GameInfo = Info:Paragraph({
+    Title = GradientText("H4xScripts", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0)),
+    Desc = "Script made by @mallo",
+    Color = "White",
+})
+
+-- 🎮 Supported Games Tab
+local SupportedGamesTab = Window:Tab({
+    Title = "Supported Games!", 
+    Icon = "gamepad",
+})
+
+-- 🪓 Cut Trees Button
+SupportedGamesTab:Button({
+    Title = "Cut Trees", 
+    Desc = "Teleport to Cut Trees!",
+    Callback = function()
+        -- Replace with Cut Trees game ID
+        local cutTreesID = 16241018808 
+        game:GetService("TeleportService"):Teleport(cutTreesID, game.Players.LocalPlayer)
+    end
+})
+
+-- 🎣 Fish It Button
+SupportedGamesTab:Button({
+    Title = "Fish It!", 
+    Desc = "Teleport to Fish It!",
+    Callback = function()
+        -- Replace with Fish It game ID
+        local fishItID = 17799431029 
+        game:GetService("TeleportService"):Teleport(fishItID, game.Players.LocalPlayer)
+    end
+})
+
+local MiscTab = Window:Tab({
+    Title = "Misc", 
+    Icon = "cog",
+    Locked = false,
+})
+
+MiscTab:Section({
+    Title = "Themes",
+    Desc = "Select Your Themes.",
+    Color = "Blue"
+})
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Full saved locations converted to Vector3
+local SavedLocations = {
+    ["Halloween spot #1"] = Vector3.new(2100.602, 81.031, 3295.725),
+    ["Halloween spot #2"] = Vector3.new(1677.609, 4.619, 3224.542),
+    ["Halloween spot #3"] = Vector3.new(1845.915, 5.288, 2899.503),
+    ["Halloween spot #4"] = Vector3.new(1675.145, 4.721, 2983.356),
+    ["ancient jungle #1"] = Vector3.new(1487.165, 6.625, -852.215),
+    ["ancient jungle #2"] = Vector3.new(1826.831, 7.625, -290.251),
+    ["ancient jungle #3"] = Vector3.new(1410.106, 30.375, 80.168),
+    ["ancient jungle #4"] = Vector3.new(892.637, 7.625, -360.875),
+    ["Coral Reefs #1"] = Vector3.new(-3023.865, 2.509, 2272.490),
+    ["Coral Reefs #2"] = Vector3.new(-3286.778, 4.178, 2420.219),
+    ["Coral Reefs #3"] = Vector3.new(-3162.948, 3.756, 2132.056),
+    ["Coral Reefs #4"] = Vector3.new(-2915.376, 3.25, 2079.401),
+    ["Tropical Grove #1"] = Vector3.new(-2139.157, 53.486, 3675.481),
+    ["Tropical Grove #2"] = Vector3.new(-2041.064, 5.111, 3818.860),
+    ["Tropical Grove #3"] = Vector3.new(-2169.025, 6.011, 3667.199),
+    ["Tropical Grove #4"] = Vector3.new(-1999.923, 8.312, 3690.198),
+    ["Fisherman #1"] = Vector3.new(-128.226, 3.262, 3068.447),
+    ["Fisherman #2"] = Vector3.new(-18.643, 3.211, 3137.314),
+    ["Fisherman #3"] = Vector3.new(250.161, 3.262, 2975.284),
+    ["Fisherman #4"] = Vector3.new(-61.574, 3.262, 2855.755),
+    ["kohana #1"] = Vector3.new(-895.300, 3.428, 730.400),
+    ["kohana #2"] = Vector3.new(-659.519, 2.825, 557.927),
+    ["kohana #3"] = Vector3.new(-655.323, 17.250, 489.119),
+    ["kohana #Volcano"] = Vector3.new(-642.519, 30.015, 113.596),
+    ["Crater #1"] = Vector3.new(1004.361, 10.938, 5057.988),
+    ["Crater #2"] = Vector3.new(1059.055, 3.749, 5025.090),
+    ["crater #3"] = Vector3.new(925.533, 6.463, 5067.278),
+    ["Crater #4"] = Vector3.new(933.406, 3.967, 5092.374),
+    ["Esoteric depths #1"] = Vector3.new(3187.171, -1302.105, 1366.361),
+    ["Esoteric depths #2"] = Vector3.new(3228.914, -1302.105, 1458.557),
+    ["Esoteric depths #3"] = Vector3.new(3219.282, -1293.864, 1365.060),
+    ["Esoteric depths #4"] = Vector3.new(3249.974, -1293.424, 1435.317)
+}
+
+-- Utility function to get sorted keys from a table
+local function GetSortedKeys(tbl)
+    local keys = {}
+    for k, _ in pairs(tbl) do
+        table.insert(keys, k)
+    end
+    table.sort(keys, function(a, b)
+        return a:lower() < b:lower()  -- alphabetical order, case-insensitive
+    end)
+    return keys
+end
+
+Dropdown = MiscTab:Dropdown({
+    Title = "Teleport Locations",
+    Desc = "Select a location to teleport",
+    Values = GetSortedKeys(SavedLocations),  -- sorted now
+    Callback = function(loc)
+        selectedLocation = loc
+    end
+})
+
+-- Button to teleport to selected location
+MiscTab:Button({
+    Title = "🧭 Teleport to Selected Location",
+    Desc = "Teleports you to the selected saved location",
+    Callback = function()
+        if not selectedLocation then 
+            warn("Select a location first!") 
+            return 
+        end
+
+        local pos = SavedLocations[selectedLocation]
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = CFrame.new(pos)
+        else
+            warn("HumanoidRootPart not found.")
+        end
+    end
+})
+
+-- 🔹 Boats Dropdown & Spawn Button
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local BoatRemote = Packages._Index["sleitnick_net@0.2.0"].net:WaitForChild("RF/SpawnBoat")
+
+-- Get all available boats from ReplicatedStorage.Boats
+local BoatsFolder = ReplicatedStorage:WaitForChild("Boats")
+local BoatNames = {}
+for _, boat in ipairs(BoatsFolder:GetChildren()) do
+    table.insert(BoatNames, boat.Name)
+end
+
+local selectedBoat = nil
+
+-- Dropdown to select boat
+local BoatDropdown = MiscTab:Dropdown({
+    Title = "Select Boat",
+    Desc = "Choose a boat to spawn",
+    Values = BoatNames,
+    Callback = function(boat)
+        selectedBoat = boat
+    end
+})
+
+-- Button to spawn selected boat
+MiscTab:Button({
+    Title = "🚤 Spawn Selected Boat",
+    Desc = "Spawns the chosen boat using the game's remote",
+    Callback = function()
+        if not selectedBoat then
+            warn("Select a boat first!")
+            return
+        end
+
+        -- Find the index of the selected boat
+        local boatIndex
+        for i, boat in ipairs(BoatsFolder:GetChildren()) do
+            if boat.Name == selectedBoat then
+                boatIndex = i
+                break
+            end
+        end
+
+        if boatIndex then
+            -- Spawn the boat using the remote
+            pcall(function()
+                BoatRemote:InvokeServer(boatIndex)
+            end)
+        else
+            warn("Could not find boat index for: " .. selectedBoat)
+        end
+    end
+})
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+
+local SavedPositions = {}
+local SelectedPosition = nil
+local Counter = 0
+local Dropdown
+
+-- Notification helper
+local function Notify(title, text)
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 3
+    })
+end
+
+-- Save position
+local function SavePosition()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return Notify("⚠️ Error", "HumanoidRootPart not found!") end
+
+    Counter += 1
+    local name = "Position #" .. Counter
+    SavedPositions[name] = root.CFrame
+    Notify(" Saved!", "Location saved as " .. name)
+
+    -- Refresh dropdown values dynamically
+    local keys = {}
+    for k in pairs(SavedPositions) do
+        table.insert(keys, k)
+    end
+    if Dropdown then
+        Dropdown:Refresh(keys)
+    end
+end
+
+-- Teleport to selected position
+local function TeleportToSaved()
+    if not SelectedPosition or not SavedPositions[SelectedPosition] then
+        return Notify("⚠️ Error", "Select a saved position first!")
+    end
+
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = SavedPositions[SelectedPosition]
+        Notify("🌀 Teleported", "Teleported to " .. SelectedPosition)
+    end
+end
+
+-- UI
+MiscTab:Button({
+    Title = "💾 Save Current Position",
+    Desc = "Saves your current position",
+    Callback = SavePosition
+})
+
+Dropdown = MiscTab:Dropdown({
+    Title = "Saved Positions",
+    Desc = "Select a saved position to teleport",
+    Values = {},
+    Callback = function(selected)
+        SelectedPosition = selected
+    end
+})
+
+MiscTab:Button({
+    Title = "🧭 Teleport to Saved Position",
+    Desc = "Teleports you to the selected saved position",
+    Callback = TeleportToSaved
+})
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+--// Saved teleport spots
+local SavedLocations = {
+	["Halloween spot #1"] = Vector3.new(2100.602, 81.031, 3295.725),
+	["Halloween spot #2"] = Vector3.new(1677.609, 4.619, 3224.542),
+	["Halloween spot #3"] = Vector3.new(1845.915, 5.288, 2899.503),
+	["Halloween spot #4"] = Vector3.new(1675.145, 4.721, 2983.356),
+
+	["ancient jungle #1"] = Vector3.new(1487.165, 6.625, -852.215),
+	["ancient jungle #2"] = Vector3.new(1826.831, 7.625, -290.251),
+	["ancient jungle #3"] = Vector3.new(1410.106, 30.375, 80.168),
+	["ancient jungle #4"] = Vector3.new(892.637, 7.625, -360.875),
+
+	["Coral Reefs #1"] = Vector3.new(-3023.865, 2.509, 2272.490),
+	["Coral Reefs #2"] = Vector3.new(-3286.778, 4.178, 2420.219),
+	["Coral Reefs #3"] = Vector3.new(-3162.948, 3.756, 2132.056),
+	["Coral Reefs #4"] = Vector3.new(-2915.376, 3.25, 2079.401),
+
+	["Tropical Grove #1"] = Vector3.new(-2139.157, 53.486, 3675.481),
+	["Tropical Grove #2"] = Vector3.new(-2041.064, 5.111, 3818.860),
+	["Tropical Grove #3"] = Vector3.new(-2169.025, 6.011, 3667.199),
+	["Tropical Grove #4"] = Vector3.new(-1999.923, 8.312, 3690.198),
+
+	["Fisherman #1"] = Vector3.new(-128.226, 3.262, 3068.447),
+	["Fisherman #2"] = Vector3.new(-18.643, 3.211, 3137.314),
+	["Fisherman #3"] = Vector3.new(250.161, 3.262, 2975.284),
+	["Fisherman #4"] = Vector3.new(-61.574, 3.262, 2855.755),
+
+	["kohana #1"] = Vector3.new(-895.300, 3.428, 730.400),
+	["kohana #2"] = Vector3.new(-659.519, 2.825, 557.927),
+	["kohana #3"] = Vector3.new(-655.323, 17.250, 489.119),
+	["kohana #Volcano"] = Vector3.new(-642.519, 30.015, 113.596),
+
+	["Crater #1"] = Vector3.new(1004.361, 10.938, 5057.988),
+	["Crater #2"] = Vector3.new(1059.055, 3.749, 5025.090),
+	["crater #3"] = Vector3.new(925.533, 6.463, 5067.278),
+	["Crater #4"] = Vector3.new(933.406, 3.967, 5092.374),
+
+	["Esoteric depths #1"] = Vector3.new(3187.171, -1302.105, 1366.361),
+	["Esoteric depths #2"] = Vector3.new(3228.914, -1302.105, 1458.557),
+	["Esoteric depths #3"] = Vector3.new(3219.282, -1293.864, 1365.060),
+	["Esoteric depths #4"] = Vector3.new(3249.974, -1293.424, 1435.317)
+}
+
+local function SortKeys(tbl)
+	local keys = {}
+	for name in pairs(tbl) do
+		table.insert(keys, name)
+	end
+	table.sort(keys, function(a, b)
+		return a:lower() < b:lower()
+	end)
+	return keys
+end
+
+local selectedLocation
+
+local TeleportDropdown = MiscTab:Dropdown({
+	Title = "Teleport Locations",
+	Desc = "Pick a location to teleport to",
+	Values = SortKeys(SavedLocations),
+	Callback = function(option)
+		selectedLocation = option
+	end
+})
+
+MiscTab:Button({
+	Title = "Teleport",
+	Desc = "Go to the chosen saved spot",
+	Callback = function()
+		if not selectedLocation then
+			warn("[Teleport] You need to pick a spot first.")
+			return
+		end
+
+		local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local root = char:FindFirstChild("HumanoidRootPart")
+
+		if root then
+			root.CFrame = CFrame.new(SavedLocations[selectedLocation])
+		else
+			warn("[Teleport] No HumanoidRootPart found.")
+		end
+	end
+})
+
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local Net = Packages:WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
+local BoatRemote = Net.net:WaitForChild("RF/SpawnBoat")
+
+local BoatsFolder = ReplicatedStorage:WaitForChild("Boats")
+local BoatNames = {}
+for _, boat in ipairs(BoatsFolder:GetChildren()) do
+	table.insert(BoatNames, boat.Name)
+end
+
+local selectedBoat
+
+local BoatDropdown = MiscTab:Dropdown({
+	Title = "Select Boat",
+	Desc = "Pick a boat to spawn",
+	Values = BoatNames,
+	Callback = function(name)
+		selectedBoat = name
+	end
+})
+
+MiscTab:Button({
+	Title = "Spawn Boat",
+	Desc = "Spawns your chosen boat",
+	Callback = function()
+		if not selectedBoat then
+			warn("[Boat] Choose a boat first.")
+			return
+		end
+
+		local index
+		for i, boat in ipairs(BoatsFolder:GetChildren()) do
+			if boat.Name == selectedBoat then
+				index = i
+				break
+			end
+		end
+
+		if not index then
+			warn("[Boat] Couldn’t find boat index.")
+			return
+		end
+
+		pcall(function()
+			BoatRemote:InvokeServer(index)
+		end)
+	end
+})
+
+-- ✅ Show popup after UI is ready
+task.delay(0.2, function()
+	WindUI:Popup({
+		Title = "Successfully Loaded",
+		Icon = "info",
+		Content = "Made by @mallo! Join our Discord!",
+		Buttons = {
+			{
+				Title = "OK",
+				Callback = function() end,
+				Variant = "Primary",
+			},
+		},
+	})
+end)
+
+print("✅ Wind UI loaded successfully")
