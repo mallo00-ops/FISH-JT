@@ -1,0 +1,608 @@
+-- 🔴 Load WindUI
+local success, WindUI = pcall(function()
+    return loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+end)
+if not success or not WindUI then
+    warn("❌ Failed to load WindUI")
+    return
+end
+
+WindUI:SetFont("rbxassetid://12187360881")
+
+local function GradientText(text, color1, color2)
+    local result = ""
+    for i = 1, #text do
+        local t = (i - 1) / (#text - 1)
+        local r = color1.R + (color2.R - color1.R) * t
+        local g = color1.G + (color2.G - color1.G) * t
+        local b = color1.B + (color2.B - color1.B) * t
+        local hex = string.format("#%02X%02X%02X", r * 255, g * 255, b * 255)
+        result = result .. string.format('<font color="%s">%s</font>', hex, text:sub(i, i))
+    end
+    return result
+end
+
+local Window = WindUI:CreateWindow({
+    Title = GradientText("H4xScripts", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0)),
+    Icon = "rbxassetid://80426684728669",
+    IconThemed = "true",
+    Author = "By @mallo",
+    Size = UDim2.fromOffset(580, 460),
+    Resizable = true,
+    Transparent = true,
+    User = {
+        Enabled = true,
+        Anonymous = true,
+        Callback = function()
+            print("clicked")
+        end,
+    },
+})
+
+Window:Tag({
+    Title = "Developer",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 10, -- from 0 to 13
+})
+
+Window:Tag({
+    Title = "test UI V1.0",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 10, -- from 0 to 13
+})
+
+Window:SetIconSize(50) -- default is 20
+
+Window:EditOpenButton({
+    Title =  GradientText("H4xScripts", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0)),
+    Icon = "rbxassetid://80426684728669",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new( -- gradient
+        Color3.fromHex("FF0F7B"), 
+        Color3.fromHex("F89B29")
+    ),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:DisableTopbarButtons({ "Close" })
+
+local Info = Window:Tab({Title = "Information", Icon = "info" })
+
+local InviteCode = "h4xscripts" -- change to your discord invite
+local DiscordAPI = "https://discord.com/api/v10/invites/" .. InviteCode .. "?with_counts=true&with_expiration=true"
+
+local Response
+local ErrorMessage = nil
+
+xpcall(function()
+    Response = game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+        Url = DiscordAPI,
+        Method = "GET",
+        Headers = {
+            ["Accept"] = "application/json"
+        }
+    }).Body)
+end, function(err)
+    warn("err fetching discord info: " .. tostring(err))
+    ErrorMessage = tostring(err)
+    Response = nil
+end)
+
+if Response and Response.guild then
+    local ParagraphConfig = {
+        Title = Response.guild.name,
+        Desc =
+            ' <font color="#52525b">•</font> Member Count: ' .. tostring(Response.approximate_member_count) ..
+            '\n <font color="#16a34a">•</font> Online Count: ' .. tostring(Response.approximate_presence_count)
+        ,
+        Image = "https://cdn.discordapp.com/icons/" .. Response.guild.id .. "/" .. Response.guild.icon .. ".png?size=256",
+        ImageSize = 42,
+        Buttons = {
+            {
+                Icon = "link",
+                Title = "Copy Discord Invite",
+                Callback = function()
+                    pcall(function()
+                        setclipboard("https://discord.gg/" .. InviteCode)
+                    end)
+                end
+            },
+            {
+                Icon = "refresh-cw",
+                Title = "Update Info",
+                Callback = function()
+                    xpcall(function()
+                        local UpdatedResponse = game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+                            Url = DiscordAPI,
+                            Method = "GET",
+                        }).Body)
+                        
+                        if UpdatedResponse and UpdatedResponse.guild then
+                            DiscordInfo:SetDesc(
+                                ' <font color="#52525b">•</font> Member Count: ' .. tostring(UpdatedResponse.approximate_member_count) ..
+                                '\n <font color="#16a34a">•</font> Online Count: ' .. tostring(UpdatedResponse.approximate_presence_count)
+                            )
+                        end
+                    end, function(err)
+                        warn("err updating discord info: " .. tostring(err))
+                    end)
+                end
+            }
+        }
+    }
+    
+    if Response.guild.banner then
+        ParagraphConfig.Thumbnail = "https://cdn.discordapp.com/banners/" .. Response.guild.id .. "/" .. Response.guild.banner .. ".png?size=256"
+        ParagraphConfig.ThumbnailSize = 80
+    end
+    
+    local DiscordInfo = Info:Paragraph(ParagraphConfig)
+else
+    Info:Paragraph({
+        Title = "Error when receiving information about the Discord server",
+        Desc = ErrorMessage or "Unknown error occurred",
+        Image = "triangle-alert",
+        ImageSize = 26,
+        Color = "Red",
+    })
+end
+
+-- 📘 Game Information Box (like “Bubble Gum Simulator INFINITY”)
+local GameInfo = Info:Paragraph({
+    Title = GradientText("H4xScripts", Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 0, 0)),
+    Desc = "Script made by @mallo",
+    Color = "White",
+})
+
+-- 🎮 Supported Games Tab
+local SupportedGamesTab = Window:Tab({
+    Title = "Supported Games!", 
+    Icon = "gamepad",
+})
+
+-- 🪓 Cut Trees Button
+SupportedGamesTab:Button({
+    Title = "Cut Trees", 
+    Desc = "Teleport to Cut Trees!",
+    Callback = function()
+        -- Replace with Cut Trees game ID
+        local cutTreesID = 16241018808 
+        game:GetService("TeleportService"):Teleport(cutTreesID, game.Players.LocalPlayer)
+    end
+})
+
+-- 🎣 Fish It Button
+SupportedGamesTab:Button({
+    Title = "Fish It!", 
+    Desc = "Teleport to Fish It!",
+    Callback = function()
+        -- Replace with Fish It game ID
+        local fishItID = 17799431029 
+        game:GetService("TeleportService"):Teleport(fishItID, game.Players.LocalPlayer)
+    end
+})
+
+local MiscTab = Window:Tab({
+    Title = "Misc", 
+    Icon = "cog",
+    Locked = false,
+})
+
+MiscTab:Section({
+    Title = "Themes",
+    Desc = "Select Your Themes.",
+    Color = "Blue"
+})
+
+-- Robust Sell + Equip (use with your existing WindUI Window / MiscTab)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local Net = require(Packages.Net)
+local ReplionPkg = require(Packages.Replion)
+
+-- Try to get Replion client (handle both .Client and direct)
+local Replion = ReplionPkg.Client or ReplionPkg
+
+-- Attempt to get Data store object
+local DataStore
+pcall(function() DataStore = Replion:WaitReplion("Data") end)
+
+-- attempt several ways to obtain inventory table (defensive)
+local function resolveInventoryTable()
+    -- 1) DataStore:GetExpect({ "Inventory" })
+    if DataStore then
+        local ok, inv = pcall(function() return DataStore:GetExpect({ "Inventory" }) end)
+        if ok and type(inv) == "table" then
+            print("[InventoryResolver] Got inventory from GetExpect({ 'Inventory' })")
+            return inv
+        end
+
+        ok, inv = pcall(function() return DataStore:GetExpect("Inventory") end)
+        if ok and type(inv) == "table" then
+            print("[InventoryResolver] Got inventory from GetExpect('Inventory')")
+            return inv
+        end
+
+        ok, inv = pcall(function() return DataStore:Get("Inventory") end)
+        if ok and type(inv) == "table" then
+            print("[InventoryResolver] Got inventory from Get('Inventory')")
+            return inv
+        end
+
+        -- DataStore might itself be the inventory table
+        if type(DataStore) == "table" and DataStore.Inventory and type(DataStore.Inventory) == "table" then
+            print("[InventoryResolver] DataStore table contains Inventory key")
+            return DataStore.Inventory
+        end
+    end
+
+    -- 2) try Replion.Client:GetReplion("Data") pattern
+    local ok, clientReplion = pcall(function() return (ReplionPkg.Client and ReplionPkg.Client:GetReplion and ReplionPkg.Client:GetReplion("Data")) end)
+    if ok and type(clientReplion) == "table" then
+        -- attempt GetExpect on that
+        local ok2, inv2 = pcall(function() return clientReplion:GetExpect and clientReplion:GetExpect("Inventory") end)
+        if ok2 and type(inv2) == "table" then
+            print("[InventoryResolver] Got inventory via Client:GetReplion('Data'):GetExpect('Inventory')")
+            return inv2
+        end
+
+        -- direct Get
+        ok2, inv2 = pcall(function() return clientReplion:Get and clientReplion:Get("Inventory") end)
+        if ok2 and type(inv2) == "table" then
+            print("[InventoryResolver] Got inventory via Client:GetReplion('Data'):Get('Inventory')")
+            return inv2
+        end
+
+        -- maybe the returned object itself is the inventory table
+        if type(clientReplion) == "table" and clientReplion.Inventory and type(clientReplion.Inventory) == "table" then
+            print("[InventoryResolver] clientReplion.Inventory found")
+            return clientReplion.Inventory
+        end
+    end
+
+    -- 3) last attempt: look for a global table in ReplicatedStorage (fallback)
+    local maybe = ReplicatedStorage:FindFirstChild("PlayerData") or ReplicatedStorage:FindFirstChild("Data")
+    if maybe and maybe:GetAttribute and maybe:GetAttribute("Inventory") then
+        print("[InventoryResolver] Found Inventory in ReplicatedStorage attributes (rare)")
+        return maybe:GetAttribute("Inventory")
+    end
+
+    print("[InventoryResolver] Inventory not found by any method")
+    return nil
+end
+
+-- utility: normalize strings for fuzzy matching
+local function normalize(s)
+    if not s then return "" end
+    local str = tostring(s):lower()
+    -- remove punctuation and multiple spaces
+    str = str:gsub("[^%w%s]", ""):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+    return str
+end
+
+-- robust search for model in ReplicatedStorage.Items by name (fuzzy)
+local function findModelByNameFuzzy(name)
+    if not name then return nil end
+    local normTarget = normalize(name)
+    local folder = ReplicatedStorage:FindFirstChild("Items")
+    if not folder then
+        -- try fallback names
+        folder = ReplicatedStorage:FindFirstChild("Item") or ReplicatedStorage
+    end
+
+    local candidates = {}
+    local function checkAndAdd(inst)
+        if not inst or not inst.Name then return end
+        local n = normalize(inst.Name)
+        if n == normTarget then
+            return inst
+        end
+        -- check attributes commonly used for display names
+        local attrs = {}
+        pcall(function()
+            local a = inst:GetAttribute("DisplayName") or inst:GetAttribute("Name") or inst:GetAttribute("ItemName")
+            if a then table.insert(attrs, tostring(a)) end
+            local tag = inst:FindFirstChild("DisplayName") or inst:FindFirstChild("Name")
+            if tag and tag:IsA("StringValue") then table.insert(attrs, tag.Value) end
+        end)
+        for _,v in ipairs(attrs) do
+            if normalize(v) == normTarget then return inst end
+        end
+        -- fuzzy contains (e.g., model name doesn't include punctuation)
+        if n:find(normTarget, 1, true) or normTarget:find(n,1,true) then
+            table.insert(candidates, inst)
+        end
+        return nil
+    end
+
+    -- breadth-first search of folder descendants
+    local queue = {folder}
+    while #queue > 0 do
+        local node = table.remove(queue, 1)
+        for _, child in ipairs(node:GetChildren()) do
+            -- direct match fast-path
+            local found = checkAndAdd(child)
+            if found then return found end
+            table.insert(queue, child)
+        end
+    end
+
+    -- if we have fuzzy candidates, return first best match
+    if #candidates > 0 then
+        print(("[EquipFinder] Fuzzy candidates found for '%s', using first: %s"):format(name, candidates[1].GetFullName and candidates[1]:GetFullName() or candidates[1].Name))
+        return candidates[1]
+    end
+
+    -- last-ditch: global findFirstChild across descendants
+    local ok, result = pcall(function() return ReplicatedStorage:FindFirstChild(name, true) end)
+    if ok and result then return result end
+
+    return nil
+end
+
+-- equip handling: ensure we end up with a Tool in Backpack and equipped
+local function equipCloneModel(modelInstance)
+    if not modelInstance then return false, "no model" end
+    local clone = modelInstance:Clone()
+    -- If the clone is already a Tool, simple path
+    if clone:IsA("Tool") then
+        clone.Parent = LocalPlayer.Backpack
+        task.wait(0.06)
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid and typeof(humanoid.EquipTool) == "function" then
+            local ok, err = pcall(function() humanoid:EquipTool(clone) end)
+            if not ok then warn("EquipTool failed:", err) end
+        end
+        return true
+    end
+
+    -- If clone is a Model with a Handle, wrap into a Tool
+    local handle = clone:FindFirstChild("Handle") or clone:FindFirstChildWhichIsA("BasePart")
+    if handle then
+        local tool = Instance.new("Tool")
+        tool.Name = clone.Name
+        handle.Parent = tool
+        -- move other visual children under tool too
+        for _,c in ipairs(clone:GetChildren()) do
+            if c ~= handle then
+                c.Parent = tool
+            end
+        end
+        -- destroy the original model container if needed
+        clone:Destroy()
+        tool.Parent = LocalPlayer.Backpack
+        task.wait(0.06)
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid and typeof(humanoid.EquipTool) == "function" then
+            pcall(function() humanoid:EquipTool(tool) end)
+        end
+        return true
+    end
+
+    -- nothing usable found: attempt to parent the model to Backpack anyway
+    clone.Parent = LocalPlayer.Backpack
+    return true
+end
+
+---------------------------------------------------------------------
+-- UI: Sell dropdown/button (robust)
+---------------------------------------------------------------------
+local MiscTab = Window:Tab({
+    Title = "Misc",
+    Icon = "settings"
+})
+
+-- Try to detect Sell remote function robustly
+local SellRemote
+pcall(function() SellRemote = Net:RemoteFunction and Net:RemoteFunction("SellItem") end)
+if not SellRemote then
+    pcall(function() SellRemote = Net["RF/SellItem"] end)
+end
+if not SellRemote then
+    warn("[SellResolver] Sell remote not detected; selling will error until correct remote name is provided.")
+end
+
+local function buildSellValues(invTable)
+    local out = {}
+    if type(invTable) ~= "table" then return {"No items found"} end
+    for category, items in pairs(invTable) do
+        if type(items) == "table" then
+            for _, item in ipairs(items) do
+                if item and item.Name then
+                    if not table.find(out, item.Name) then
+                        table.insert(out, item.Name)
+                    end
+                end
+            end
+        end
+    end
+    if #out == 0 then table.insert(out, "No items found") end
+    table.sort(out)
+    return out
+end
+
+local function getInventorySafe()
+    local inv = resolveInventoryTable()
+    if inv and type(inv) == "table" then
+        return inv
+    end
+    -- fallback: attempt to read a global Inventory variable on DataStore
+    if DataStore and type(DataStore) == "table" and DataStore.Inventory and type(DataStore.Inventory) == "table" then
+        return DataStore.Inventory
+    end
+    return {}
+end
+
+local sellDropdown = MiscTab:Dropdown({
+    Title = "🎣 Select Item to Sell",
+    Desc = "Choose an item from your inventory",
+    Values = buildSellValues(getInventorySafe()),
+    Callback = function(selected)
+        if type(selected) == "table" then selected = selected[1] end
+        if selected ~= "No items found" then _G.SelectedSellItem = selected end
+    end
+})
+
+MiscTab:Button({
+    Title = "💰 Sell Selected Item",
+    Desc = "Sells the selected item from your inventory",
+    Callback = function()
+        local itemName = _G.SelectedSellItem
+        if not itemName then return WindUI:Notify({ Title = "Error", Content = "Select an item first!", Duration = 3 }) end
+
+        local inv = getInventorySafe()
+        local uuid
+        for _, items in pairs(inv) do
+            if type(items) == "table" then
+                for _, it in ipairs(items) do
+                    if it and it.Name == itemName and it.UUID then
+                        uuid = it.UUID
+                        break
+                    end
+                end
+            end
+            if uuid then break end
+        end
+
+        if not uuid then
+            WindUI:Notify({ Title = "Error", Content = "Could not find UUID for: "..tostring(itemName), Duration = 4 })
+            warn("[Sell] Could not resolve UUID for", itemName)
+            -- attempt immediate refresh of dropdown to help user
+            if sellDropdown and sellDropdown.Refresh then sellDropdown:Refresh(buildSellValues(inv)) end
+            return
+        end
+
+        if not SellRemote or typeof(SellRemote.InvokeServer) ~= "function" then
+            WindUI:Notify({ Title = "Error", Content = "Sell remote missing/invalid.", Duration = 4 })
+            warn("[Sell] SellRemote invalid", SellRemote)
+            return
+        end
+
+        local ok, res = pcall(function() return SellRemote:InvokeServer(uuid) end)
+        if ok then
+            WindUI:Notify({ Title = "Success", Content = "✅ Sold: "..itemName, Duration = 3 })
+        else
+            WindUI:Notify({ Title = "Error", Content = "Sell failed: "..tostring(res), Duration = 4 })
+            warn("[Sell] remote error:", res)
+        end
+
+        if sellDropdown and sellDropdown.Refresh then sellDropdown:Refresh(buildSellValues(getInventorySafe())) end
+    end
+})
+
+---------------------------------------------------------------------
+-- UI: Equip rod model (robust)
+---------------------------------------------------------------------
+local function getRodSkinNamesSafe()
+    local ok, crates = pcall(function() return require(ReplicatedStorage:WaitForChild("SkinCrates")) end)
+    if not ok or type(crates) ~= "table" then
+        warn("[Skins] SkinCrates require failed or missing:", crates)
+        return {}
+    end
+    local out = {}
+    for _, crate in pairs(crates) do
+        for _, item in ipairs(crate.Items or {}) do
+            local info = item.CurrencyRewardInfo
+            if info and info[1] == "Fishing Rods" and info[2] then
+                if not table.find(out, info[2]) then table.insert(out, info[2]) end
+            end
+        end
+    end
+    table.sort(out)
+    return out
+end
+
+local equipDropdown = MiscTab:Dropdown({
+    Title = "🎨 Select Rod Skin",
+    Desc = "Choose a rod skin to equip (uses ReplicatedStorage.Items)",
+    Values = getRodSkinNamesSafe(),
+    Callback = function(selected)
+        if type(selected) == "table" then selected = selected[1] end
+        _G.SelectedRodSkin = selected
+    end
+})
+
+MiscTab:Button({
+    Title = "🎣 Equip Selected Skin (real model)",
+    Desc = "Clones model from ReplicatedStorage.Items and equips it locally (fuzzy search)",
+    Callback = function()
+        local skin = _G.SelectedRodSkin
+        if not skin then return WindUI:Notify({ Title = "Error", Content = "Select a skin first!", Duration = 3 }) end
+
+        local model = findModelByNameFuzzy(skin)
+        if not model then
+            WindUI:Notify({ Title = "Error", Content = "Model not found for: "..tostring(skin), Duration = 4 })
+            warn("[Equip] Model not found for", skin)
+            -- debug: list top-level Items children names
+            local itemsFolder = ReplicatedStorage:FindFirstChild("Items")
+            if itemsFolder then
+                local names = {}
+                for _,c in ipairs(itemsFolder:GetChildren()) do table.insert(names, c.Name) end
+                print("[EquipDebug] Items top children:", table.concat(names, ", "))
+            else
+                print("[EquipDebug] ReplicatedStorage.Items folder not present")
+            end
+            return
+        end
+
+        local ok, res = pcall(function() return equipCloneModel(model) end)
+        if ok and res then
+            WindUI:Notify({ Title = "Success", Content = "✨ Equipped model: "..skin, Duration = 3 })
+        else
+            WindUI:Notify({ Title = "Error", Content = "Failed to equip model: "..tostring(res), Duration = 4 })
+            warn("[Equip] equipCloneModel error:", res)
+        end
+    end
+})
+
+---------------------------------------------------------------------
+-- Auto-refresh + debug output
+---------------------------------------------------------------------
+-- Try to refresh the sell dropdown from Inventory changes (many possible subscription points)
+if DataStore and DataStore.Changed then
+    pcall(function()
+        DataStore.Changed:Connect(function(path, value)
+            if sellDropdown and sellDropdown.Refresh then
+                sellDropdown:Refresh(buildSellValues(getInventorySafe()))
+            end
+        end)
+    end)
+end
+
+-- Also refresh periodically and on start
+if sellDropdown and sellDropdown.Refresh then
+    sellDropdown:Refresh(buildSellValues(getInventorySafe()))
+end
+if equipDropdown and equipDropdown.Refresh then
+    equipDropdown:Refresh(getRodSkinNamesSafe())
+end
+
+task.spawn(function()
+    while task.wait(60) do
+        if sellDropdown and sellDropdown.Refresh then sellDropdown:Refresh(buildSellValues(getInventorySafe())) end
+        if equipDropdown and equipDropdown.Refresh then equipDropdown:Refresh(getRodSkinNamesSafe()) end
+    end
+end)
+
+-- Debug prints for you
+local function debugSamples()
+    local inv = getInventorySafe()
+    if inv and next(inv) then
+        local sample = {}
+        for k,v in pairs(inv) do table.insert(sample, tostring(k)) end
+        print("[Debug] Inventory categories found:", table.concat(sample, ", "))
+    else
+        print("[Debug] Inventory not found or empty")
+    end
+    print("[Debug] ReplicatedStorage.Items exists:", tostring(ReplicatedStorage:FindFirstChild("Items") ~= nil))
+    print("[Debug] Sample skins:", table.concat(getRodSkinNamesSafe(), ", "))
+end
+
+debugSamples()
